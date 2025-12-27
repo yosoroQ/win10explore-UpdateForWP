@@ -48,9 +48,12 @@ add_filter( 'big_image_size_threshold', '__return_false' );
 
 * 在「上一页 / 下一页」之间插入自定义分隔文本，并加粗显示。
 * 新增页码跳转模块，方便在文章较多时快速定位页面。
+* 251227修改页码跳转模块，考虑到非法输入，页码跳转改为下拉框选择。
+* 同时页码跳转下拉框显示当前页码。
 
 <p align="center">
-  <img src="https://github.com/yosoroQ/win10explore-UpdateForWP/blob/main/imgUpdate/PaginationEnhancementAndPageJump.png" width="50%">
+  <img src="https://github.com/yosoroQ/win10explore-UpdateForWP/blob/main/imgUpdate/page1.png" width="50%">
+  <img src="https://github.com/yosoroQ/win10explore-UpdateForWP/blob/main/imgUpdate/page21.png" width="50%">
 </p>
 
 ---
@@ -80,10 +83,11 @@ add_filter( 'big_image_size_threshold', '__return_false' );
 
 * 实时统计网站总浏览量，展示当前访客的访问序号与IP地址；
 * 优化文件操作逻辑：添加排他锁（`LOCK_EX`）防止并发计数错误，处理空文件/非数字内容边界情况；
-* 计数器文件路径固定至 `wp-content/uploads/counter.txt`，确保全站统计数据统一；
+* 计数器文件路径固定至 `根目录/counter.txt`，确保全站统计数据统一；
+* 将每次访问的IP都统计在 `根目录/visit_loglog.csv`中，方便查看和筛查；
 * 增加文件操作失败的可视化错误提示，便于排查权限问题。
 
-> 💡 备注：需确保 `wp-content/uploads` 目录具备写入权限（推荐权限：755），否则统计功能无法正常工作。
+> 💡 备注：需确保存储目录具备写入权限（推荐权限：755），否则统计功能无法正常工作。
 
 ```
 您是第 28 位访客（Post-27 Dec 2025），您的IP是:[127.0.0.1]

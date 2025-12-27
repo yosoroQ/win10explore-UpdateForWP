@@ -1,7 +1,6 @@
 <?php
 include_once 'inc/obj.php';
 get_header();
-
 ?>
 
 <div class="layui-container" id="main">
@@ -10,11 +9,8 @@ get_header();
         bloginfo('name'); ?>
         <div class="close"><a href="javascript:window.opener=null;window.open('','_self');window.close();"><i
                         class="layui-icon layui-icon-close"></i></a>
-
         </div>
     </div>
-
-
 
     <div class="toolbar">
         <div class="layui-row">
@@ -48,13 +44,37 @@ get_header();
         </div>
         <div class="layui-col-md10 postlist">
             <?php default_post(); ?>
-            
-            <!-- 优化间距后的分页区域 -->
+
+            <!-- 优化后的分页区域，下拉框只显示页码数字 -->
             <div class="posts-nav" style="margin-top:10px; text-align:center; padding:5px 0;">
+                <?php 
+                // 获取当前页码
+                $current_page = get_query_var('paged') ? get_query_var('paged') : 1;
+                // 获取总页数
+                global $wp_query;
+                $total_pages = $wp_query->max_num_pages;
+                ?>
+            
                 <?php posts_nav_link(' <b>繚乱！ビクトリーロード</b> '); ?>
+
+                <!-- 下拉框只显示页码数字 -->
+                <div style="display:inline-flex; align-items:center; gap:5px; margin-left:10px;">
+                    <span>跳转至：</span>
+                    <select id="pageSelect" 
+                            style="width:60px; padding:3px; border:1px solid #ddd; border-radius:3px; font-size:14px;"
+                            onchange="jumpToPage()">
+                        <?php 
+                        // 生成页码选项，只显示页码数字
+                        for ($i = 1; $i <= $total_pages; $i++) {
+                            $selected = ($i == $current_page) ? 'selected' : '';
+                            echo "<option value='$i' $selected>$i</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
                 
                 <!-- 缩小元素间间距 -->
-                <div style="display:inline-flex; align-items:center; gap:5px; margin-left:10px;">
+                <!-- <div style="display:inline-flex; align-items:center; gap:5px; margin-left:10px;">
                     <span>跳转至：</span>
                     <input type="number" id="targetPage" min="1" placeholder="页码" 
                            style="width:50px; padding:3px; border:1px solid #ddd; border-radius:3px; font-size:14px;">
@@ -62,7 +82,7 @@ get_header();
                             style="padding:3px 8px; border:none; background:#009688; color:#fff; border-radius:3px; cursor:pointer; font-size:14px;">
                         确认
                     </button>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
@@ -71,8 +91,10 @@ get_header();
 
 <script>
 // 原有跳转页面函数（保留不变）
+// 跳转页面函数
 function jumpToPage() {
-    const targetPage = parseInt(document.getElementById('targetPage').value);
+    const selectElement = document.getElementById('pageSelect');
+    const targetPage = parseInt(selectElement.value);
     const currentUrl = window.location.href;
     let baseUrl = currentUrl;
 
@@ -82,8 +104,8 @@ function jumpToPage() {
         baseUrl = currentUrl.replace(/&paged=\d+/, '');
     }
 
-    if (isNaN(targetPage) || targetPage < 1) {
-        alert('请输入有效的正整数页码！');
+    if (isNaN(targetPage) || targetPage < 1 || targetPage > <?php echo $total_pages; ?>) {
+        alert('请选择有效的页码！');
         return;
     }
 
