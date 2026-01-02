@@ -54,7 +54,8 @@ add_filter( 'big_image_size_threshold', '__return_false' );
 * 同时页码跳转下拉框显示当前页码。
 
 <p align="center">
-  <img src="https://github.com/yosoroQ/win10explore-UpdateForWP/blob/main/imgUpdate/page1.png" width="50%">
+  <img src="https://github.com/yosoroQ/win10explore-UpdateForWP/blob/main/imgUpdate/page1.png" width="23%">
+  <br>
   <img src="https://github.com/yosoroQ/win10explore-UpdateForWP/blob/main/imgUpdate/page21.png" width="50%">
 </p>
 
