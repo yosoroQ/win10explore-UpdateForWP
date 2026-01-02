@@ -1,6 +1,8 @@
 <footer>
-    <p>Copyright © 2020~2026 <a href=""> <?php echo bloginfo('name')?> </a>.
-       Theme  made by <a href="http://www.lovestu.com/Win10explorer">Win10explorer</a></p>
+    <p>Copyright © 2020~<?php echo date('Y'); ?> 
+       <a href=""><?php echo bloginfo('name'); ?></a>.
+       Theme made by <a href="http://www.lovestu.com/Win10explorer">Win10explorer</a>
+    </p>
     <a href="https://beian.miit.gov.cn">粤ICP备20047854号</a>
     <br>
     <span id="runtime_span"></span>
@@ -9,48 +11,95 @@
     // 定义计数器文件和访问记录记录文件路径（服务器根目录）
     $counterFile = $_SERVER['DOCUMENT_ROOT'] . "/counter.txt";
     $visitLogFile = $_SERVER['DOCUMENT_ROOT'] . "/visit_loglog.csv"; // 改为CSV文件
+    $ipRecordFile = $_SERVER['DOCUMENT_ROOT'] . "/ip_record.txt"; // IP访问记录
     
-    // 安全获取IP地址
+    // 获取客户端IP
     $ip = isset($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "未知IP";
     
-    // 记录访问日志（CSV格式，日期和IP分列）
-    $visitTime = date("Y-m-d H:i:s");
-    // CSV格式处理：使用逗号分隔列，为防止包含特殊字符，用双引号包裹字段
-    $logEntry = "\"{$visitTime}\",\"{$ip}\"" . PHP_EOL;
+    // 当前时间（格式：YYYY-MM-DD HH:MM:SS）
+    $now = date("Y-m-d H:i:s");
     
-    // 写入访问日志（追加模式）
-    $logFp = fopen($visitLogFile, "a+");
-    if ($logFp) {
-        flock($logFp, LOCK_EX);
-        // 首次写入时添加CSV表头
-        if (filesize($visitLogFile) == 0) {
-            fwrite($logFp, "访问时间,IP地址" . PHP_EOL);
+    // 读取已有的IP记录
+    $ipRecords = array();
+    if (file_exists($ipRecordFile)) {
+        $fp = fopen($ipRecordFile, "r");
+        if ($fp) {
+            flock($fp, LOCK_SH);
+            while (($line = fgets($fp)) !== false) {
+                $line = trim($line);
+                if (!empty($line)) {
+                    list($recordIp, $recordTime) = explode(",", $line);
+                    $ipRecords[$recordIp] = $recordTime;
+                }
+            }
+            flock($fp, LOCK_UN);
+            fclose($fp);
         }
-        fwrite($logFp, $logEntry);
-        flock($logFp, LOCK_UN);
-        fclose($logFp);
     }
-
-    // 统计总访问量
-    $fp = fopen($counterFile, "a+");
+    
+    // 判断是否超过30分钟
+    $isNewVisit = false;
+    if (!isset($ipRecords[$ip]) || (strtotime($now) - strtotime($ipRecords[$ip]) > 1800)) {
+        $isNewVisit = true;
+        $ipRecords[$ip] = $now;
+    }
+    
+    // 写入更新后的IP记录
+    $fp = fopen($ipRecordFile, "w");
     if ($fp) {
         flock($fp, LOCK_EX);
-        fseek($fp, 0);
+        foreach ($ipRecords as $recordIp => $recordTime) {
+            fwrite($fp, $recordIp . "," . $recordTime . "\n");
+        }
+        flock($fp, LOCK_UN);
+        fclose($fp);
+    }
+    
+    // 增加总访问量
+    if ($isNewVisit) {
+        $fp = fopen($counterFile, "a+");
+        if ($fp) {
+            flock($fp, LOCK_EX);
+            fseek($fp, 0);
+            $num = trim(fgets($fp, 10));
+            $num = $num ? intval($num) : 0;
+            $num += 1;
+            ftruncate($fp, 0);
+            fwrite($fp, $num);
+            flock($fp, LOCK_UN);
+            fclose($fp);
+        }
+    }
+    
+    // 写入访问日志
+    if ($isNewVisit) {
+        $logEntry = "\"{$now}\",\"{$ip}\"" . PHP_EOL;
+        $logFp = fopen($visitLogFile, "a+");
+        if ($logFp) {
+            flock($logFp, LOCK_EX);
+            if (filesize($visitLogFile) == 0) {
+                fwrite($logFp, "访问时间,IP地址" . PHP_EOL);
+            }
+            fwrite($logFp, $logEntry);
+            flock($logFp, LOCK_UN);
+            fclose($logFp);
+        }
+    }
+    
+    // 输出信息
+    $fp = fopen($counterFile, "r");
+    if ($fp) {
+        flock($fp, LOCK_SH);
         $num = trim(fgets($fp, 10));
         $num = $num ? intval($num) : 0;
-        $num += 1;
-        
-        // IP地址添加超链接到Bing搜索，使用样式消除链接突显效果
-        $ipLink = '<a href="https://www.bing.com/search?q=' . htmlspecialchars($ip) . '" style="text-decoration: none; color: inherit;">' . htmlspecialchars($ip) . '</a>';
-        echo '<br><span style="font-size: 0.9em;">您是第 ' . $num . ' 位访客（Post-27 Dec 2025），您的IP是：[' . $ipLink . ']</span>';
-        
-        ftruncate($fp, 0);
-        fwrite($fp, $num);
         flock($fp, LOCK_UN);
         fclose($fp);
     } else {
-        echo '<br><span style="color: red;">访问量统计文件创建失败</span>';
+        $num = 0;
     }
+    
+    $ipLink = '<a href="https://www.bing.com/search?q=' . htmlspecialchars($ip) . '" style="text-decoration: none; color: inherit;">' . htmlspecialchars($ip) . '</a>';
+    echo '<br><span style="font-size: 0.9em;">您是第 ' . $num . ' 位访客（Post-27 Dec 2025），您的IP是：[' . $ipLink . ']</span>';
     ?>
 <script type="text/javascript">
 function show_runtime(){
@@ -82,4 +131,3 @@ function show_runtime(){
 show_runtime();
 </script>
 </footer>
-<?php
