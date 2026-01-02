@@ -16,8 +16,8 @@
     // 获取客户端IP
     $ip = isset($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : "未知IP";
     
-    // 当前时间（格式：YYYY-MM-DD HH:MM:SS）
-    $now = date("Y-m-d H:i:s");
+    // 当前时间 UTC+8
+    $now = gmdate("Y-m-d H:i:s", time() + 8 * 3600);
     
     // 读取已有的IP记录
     $ipRecords = array();
